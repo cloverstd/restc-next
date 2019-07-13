@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import styled from 'styled-components'
 import Highlight from 'react-highlight.js'
+import { ImageView, DownloadView } from './FileView'
 
 
 const Section = styled.section`
@@ -37,7 +38,10 @@ flex-direction: column;
     text-align: center;
     font-weight: 600;
     color: #5d6576;
-    &:hover { opacity: .8; }
+    &:hover { 
+      opacity: .8;
+      cursor: pointer;
+    }
   }
   > span {
     transition: left 200ms ease, right 200ms ease;
@@ -87,16 +91,20 @@ const Underline = styled.span`
 left: ${props => props.underline}px;
 `
 
-const Pre = styled.pre`
+const ResultWrapper = styled.div`
 font-size: 12px;
 line-height: 1.5;
+margin-bottom: 0 8px;
 & code {
-    margin: 0 8px;
-    padding: 20px 32px;
+    padding: 20px 32px 0px;
     background: transparent;
     overflow: visible;
 }
+& a {
+  margin-left: 32px;
+}
 `
+
 
 export default class Result extends Component {
   constructor(props) {
@@ -152,14 +160,13 @@ export default class Result extends Component {
         contentDisposition = { attachment: false };
       }
       let { attachment, filename } = contentDisposition;
-      let $body;
-      if (image) {
+      let $body
+      if (binary || attachment || image) {
         $body = response.blob().then(URL.createObjectURL).then(url => {
-          // return { elements: [ new ResponseViewImage({ url, filename }) ] };
-        });
-      } else if (binary || attachment) {
-        $body = response.blob().then(URL.createObjectURL).then(url => {
-          // return { elements: [ new ResponseViewDownloadLink({ url, filename }) ] };
+          let key = image ? 'image' : 'file'
+          return {
+            [key]: { filename, url }
+          }
         });
       } else {
         $body = response.text().then(result => {
@@ -172,9 +179,12 @@ export default class Result extends Component {
           return { body };
         });
       }
-      $body.then(({ body, elements = [] }) => {
-        this.setState({ response: [status, headers, '', body].join('\n') })
-        // this.block.update([ status, headers, '', body ].join('\n'), ...elements);
+      return $body.then(({ body, image, file }) => {
+        this.setState({ 
+          response: [status, headers, '', body].join('\n'),
+          image: image,
+          file: file
+        })
       })
     }).catch(({ message }) => {
       console.error(message)
@@ -213,18 +223,20 @@ export default class Result extends Component {
           </dt>
           <dd>
             {this.state.target === 0 && (
-              <Pre>
+              <ResultWrapper>
                 <Highlight language={'http'}>
                   {this.state.response || ''}
                 </Highlight>
-              </Pre>
+                {this.state.image && <ImageView image={this.state.image}/>}
+                {this.state.file && <DownloadView file={this.state.file}/>}
+              </ResultWrapper>
             )}
             {this.state.target === 1 && (
-              <Pre>
+              <ResultWrapper>
                 <Highlight language={'http'}>
                   {this.state.request || ''}
                 </Highlight>
-              </Pre>
+              </ResultWrapper>
             )}
           </dd>
         </DL>

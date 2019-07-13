@@ -132,7 +132,9 @@ export default class SideBar extends Component {
           'Content-Type': 'application/json'
         };
         headers = Object.assign({}, defaultHeaders, headers)
-        let uri = `//${location.host}${path}`
+        let host = location.host
+        host = 'localhost:3000'
+        let uri = `//${host}${path}`
         if (queryString) uri += '?' + queryString
         let options = { method, headers, credentials: 'include', body }
         let $response = fetch(uri, options)
