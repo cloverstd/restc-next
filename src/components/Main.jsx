@@ -25,23 +25,22 @@ export default class Main extends Component {
 
     this.state = {}
   }
-    onRequest(request, $response) {
-      this.result.update(request, $response)
-    }
-    toggle() {
-      this.setState(state => {
-        return {
-          collapse: state.collapse === 'sidebar-collapse' ? void 0 : 'sidebar-collapse'
-        }
-      })
-    }
-    render() {
-      return (
-        <Container className={this.state.collapse}>
-          <Result ref={r => this.result = r}/>
-          <SideBar onRequest={(req, resp) => this.onRequest(req, resp)}/>
-        </Container>
-      )
-    }
+  onRequest(request, $response) {
+    this.result.update(request, $response)
   }
-  
+  toggle() {
+    this.setState(state => {
+      return {
+        collapse: state.collapse === 'sidebar-collapse' ? void 0 : 'sidebar-collapse'
+      }
+    })
+  }
+  render() {
+    return (
+      <Container className={this.state.collapse}>
+        <Result ref={r => this.result = r} />
+        <SideBar onRequest={(req, resp) => this.onRequest(req, resp)} />
+      </Container>
+    )
+  }
+}

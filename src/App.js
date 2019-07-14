@@ -39,11 +39,11 @@ class App extends Component {
   }
   render() {
     return (
-        <AppStyle>
-          <GlobalStyle />
-          <Header onToggleClick={() => this.toggle()}/>
-          <Main ref={ref => this.main = ref}/>
-        </AppStyle>
+      <AppStyle>
+        <GlobalStyle />
+        <Header onToggleClick={() => this.toggle()} />
+        <Main ref={ref => this.main = ref} />
+      </AppStyle>
     );
   }
 }

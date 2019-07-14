@@ -38,7 +38,7 @@ flex-direction: column;
     text-align: center;
     font-weight: 600;
     color: #5d6576;
-    &:hover { 
+    &:hover {
       opacity: .8;
       cursor: pointer;
     }
@@ -132,7 +132,7 @@ export default class Result extends Component {
       [method, uri, 'HTTP/1.1'].join(' '),
       ...headers.map(({ key, value }) => [key, value].join(': '))
     ].join('\n');
-    if (![ 'HEAD', 'GET' ].includes(method) && body) request = [request, body].join('\n\n');
+    if (!['HEAD', 'GET'].includes(method) && body) request = [request, body].join('\n\n');
     this.setState({ request })
   }
   update(request, $response) {
@@ -180,7 +180,7 @@ export default class Result extends Component {
         });
       }
       return $body.then(({ body, image, file }) => {
-        this.setState({ 
+        this.setState({
           response: [status, headers, '', body].join('\n'),
           image: image,
           file: file
@@ -231,8 +231,8 @@ export default class Result extends Component {
                 <Highlight language={'http'}>
                   {this.state.response || ''}
                 </Highlight>
-                {this.state.image && <ImageView image={this.state.image}/>}
-                {this.state.file && <DownloadView file={this.state.file}/>}
+                {this.state.image && <ImageView image={this.state.image} />}
+                {this.state.file && <DownloadView file={this.state.file} />}
               </ResultWrapper>
             )}
             {this.state.target === 1 && (
