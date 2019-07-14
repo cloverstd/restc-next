@@ -112,7 +112,7 @@ export default class SideBar extends Component {
   handleSubmit(e) {
     e.preventDefault()
 
-    let path = location.pathname
+    let path = window.requestInfo.path
     let { method, queryString, body, headers } = this.state
     if (!method) {
       method = 'GET'
@@ -122,7 +122,7 @@ export default class SideBar extends Component {
       'Content-Type': 'application/json'
     };
     headers = Object.assign({}, defaultHeaders, headers)
-    let host = location.host
+    let host = window.requestInfo.host
     let uri = `//${host}${path}`
     if (queryString) uri += '?' + queryString
     if (method === 'GET' || method === 'HEAD' || !method) {
