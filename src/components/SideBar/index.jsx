@@ -3,6 +3,7 @@ import styled from 'styled-components'
 import { Input, KeyValue } from './Input';
 import CodeMirror from 'react-codemirror';
 import 'codemirror/lib/codemirror.css'
+import 'codemirror/theme/material.css'
 import 'codemirror/mode/javascript/javascript'
 
 
@@ -117,11 +118,13 @@ export default class SideBar extends Component {
     if (!method) {
       method = 'GET'
     }
-    let defaultHeaders = {
+
+    let defaultHeaders = new Headers({
       Accept: 'application/json, */*',
-      'Content-Type': 'application/json'
-    };
-    headers = Object.assign({}, defaultHeaders, headers)
+      'Content-Type': 'application/json',
+    })
+    headers && headers.map(header => defaultHeaders.append(encodeURIComponent(header.key), header.value))
+    headers = defaultHeaders
     let host = window.requestInfo.host
     let uri = `//${host}${path}`
     if (queryString) uri += '?' + queryString
@@ -159,8 +162,9 @@ export default class SideBar extends Component {
       try {
         headers = JSON.parse(params.get('headers'))
       } catch (e) { }
-
       this.setState({ method, query, body, headers }, () => {
+        this.headerKeyValue.setData(headers)
+        this.queryKeyValue.setData(query)
         this.encodeQueryString(this.state.query)
       })
     }
@@ -234,8 +238,9 @@ export default class SideBar extends Component {
         <div>
           <H>Body</H>
           <CodeMirrorWrapper>
-            <CodeMirror className="CodeMirror" onChange={(e) => this.onBodyChange(e)} options={{
-              mode: 'javascript'
+            <CodeMirror className="CodeMirror" value={this.state.body} onChange={(e) => this.onBodyChange(e)} options={{
+              mode: 'javascript',
+              theme: 'material'
             }} />
           </CodeMirrorWrapper>
         </div>
@@ -245,7 +250,7 @@ export default class SideBar extends Component {
       <Aside>
         <Form onSubmit={this.handleSubmit}>
           <MethodSection>
-            <Select onChange={e => this.onMethodChange(e)}>
+            <Select onChange={e => this.onMethodChange(e)} value={this.state.method}>
               <option>GET</option>
               <option>POST</option>
               <option>PUT</option>
@@ -259,7 +264,7 @@ export default class SideBar extends Component {
           <KeyValue addText={'add query parameter'} ref={keyValue => this.queryKeyValue = keyValue} onChange={v => this.onQueryChange(v)} defaultValue={this.state.query && this.state.query.length > 0 && this.state.query[0]} />
           {body}
           <H>Headers</H>
-          <KeyValue addText={'add header'} onChange={v => this.onHeaderChange(v)} />
+          <KeyValue addText={'add header'} ref={ref => this.headerKeyValue = ref} onChange={v => this.onHeaderChange(v)} />
         </Form>
       </Aside>
     )
