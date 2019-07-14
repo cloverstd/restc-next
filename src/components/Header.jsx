@@ -32,6 +32,7 @@ const Toggle = styled.a`
   overflow: hidden;
   &:hover {
     background-color: #3f4555;
+    cursor: pointer;
   }
   &:active, &.active {
     background-color: #2d2f3b;
@@ -39,12 +40,27 @@ const Toggle = styled.a`
 `
 
 export default class Header extends Component {
+    constructor(props) {
+      super(props)
+
+      this.state = {
+        active: 'active'
+      }
+    }
+    click() {
+      this.setState(state => {
+        return {
+          active: state.active === 'active' ? void 0 : 'active'
+        }
+      }, () => {
+        this.props.onToggleClick && this.props.onToggleClick()
+      })
+    }
     render() {
-      const active = 'active';
       return (
         <HeaderStyle>
           <Brand href="https://github.com/ElemeFE/restc"></Brand>
-          <Toggle className={active} onClick={() => {}}>Toggle SideBar</Toggle>
+          <Toggle className={this.state.active} onClick={() => this.click()}>Toggle SideBar</Toggle>
         </HeaderStyle>
       )
     }

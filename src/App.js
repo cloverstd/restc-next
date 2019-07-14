@@ -34,12 +34,15 @@ const AppStyle = styled.div`
 `
 
 class App extends Component {
+  toggle() {
+    this.main.toggle()
+  }
   render() {
     return (
         <AppStyle>
           <GlobalStyle />
-          <Header />
-          <Main />
+          <Header onToggleClick={() => this.toggle()}/>
+          <Main ref={ref => this.main = ref}/>
         </AppStyle>
     );
   }
