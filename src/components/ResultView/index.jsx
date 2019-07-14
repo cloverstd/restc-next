@@ -187,7 +187,11 @@ export default class Result extends Component {
         })
       })
     }).catch(({ message }) => {
-      console.error(message)
+      this.setState({
+        response: message,
+        image: void 0,
+        file: void 0
+      })
     }).then(() => {
       this.setState({
         loading: false
