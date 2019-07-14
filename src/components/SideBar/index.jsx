@@ -104,17 +104,7 @@ export default class SideBar extends Component {
     constructor(props) {
         super(props)
 
-        this.state = {
-            headers: [],
-            method: '',
-            query: [{
-                checked: true,
-                key: 'new item',
-                value: ''
-            }],
-            body: void 0,
-            queryString: ''
-        }
+        this.state = {}
 
         this.handleSubmit = this.handleSubmit.bind(this)
 
@@ -136,7 +126,11 @@ export default class SideBar extends Component {
         host = 'localhost:3000'
         let uri = `//${host}${path}`
         if (queryString) uri += '?' + queryString
+        if (method === 'GET' || method === 'HEAD' || !method) {
+            body = void 0
+        }
         let options = { method, headers, credentials: 'include', body }
+        this.encodeHash()
         let $response = fetch(uri, options)
 
         this.props.onRequest && this.props.onRequest({ method, path, queryString, body, headers }, $response)
@@ -154,9 +148,30 @@ export default class SideBar extends Component {
         })
     }
     componentDidMount() {
-        this.encodeQueryString(this.state.query)
+        let parseParams = () => {
+            let params = new URLSearchParams(location.hash.slice(2))
+            let query = []
+            let body = params.get('body') || ''
+            let method = params.get('method') || 'GET'
+            let headers
+            try {
+                query = JSON.parse(params.get('query'))
+            } catch(e) {}
+            try {
+                headers = JSON.parse(params.get('headers'))
+            } catch(e) {}
+            
+            this.setState({ method, query, body, headers }, () => {
+                this.encodeQueryString(this.state.query)
+            })
+        }
+        parseParams()
+        addEventListener('hashchange', parseParams)
     }
     encodeQueryString(value) {
+        if (!value) {
+            return
+        }
         let query = new URLSearchParams();
         value.filter(item => item.checked).map(item => query.append(item.key, item.value))
         let queryString = query.toString()
@@ -203,6 +218,15 @@ export default class SideBar extends Component {
     }
     onHeaderChange(headers) {
         this.setState({headers})
+    }
+    encodeHash() {
+        let query = this.state.query ? JSON.stringify(this.state.query) : '[]'
+        let body = this.state.body || ''
+        let method = this.state.method || 'GET'
+        let headers = this.state.headers ? JSON.stringify(this.state.headers) : '[]'
+
+        let params = new URLSearchParams({ method, query, body, headers})
+        location.hash = '#!' + params.toString()
     }
     render() {
         let body
