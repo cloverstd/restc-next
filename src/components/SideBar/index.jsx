@@ -123,7 +123,6 @@ export default class SideBar extends Component {
     };
     headers = Object.assign({}, defaultHeaders, headers)
     let host = location.host
-    host = 'localhost:3000'
     let uri = `//${host}${path}`
     if (queryString) uri += '?' + queryString
     if (method === 'GET' || method === 'HEAD' || !method) {
