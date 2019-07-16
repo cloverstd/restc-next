@@ -1,10 +1,7 @@
 import React, { Component } from 'react';
 import styled from 'styled-components'
 import { Input, KeyValue } from './Input';
-import CodeMirror from 'react-codemirror';
-import 'codemirror/lib/codemirror.css'
-import 'codemirror/theme/material.css'
-import 'codemirror/mode/javascript/javascript'
+import Body from './Body'
 
 
 const Aside = styled.aside`
@@ -89,51 +86,78 @@ cursor: pointer;
 transition: .15s background;
 `
 
-const CodeMirrorWrapper = styled.div`
-.CodeMirror {
-  margin-top: 1em;
-  padding: 1em;
-  height: 10em;
-  border-radius: 8px;
-  background: #3f4555;
-  font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
-  line-height: 1.5;
-}
-`
-
 export default class SideBar extends Component {
   constructor(props) {
     super(props)
 
-    this.state = {}
+    this.state = {
+      ...this.parseParams()
+    }
 
     this.handleSubmit = this.handleSubmit.bind(this)
 
   }
   handleSubmit(e) {
     e.preventDefault()
-
-    let path = window.requestInfo.path
     let { method, queryString, body, headers } = this.state
+    let path = window.requestInfo.path
     if (!method) {
       method = 'GET'
     }
-
-    let defaultHeaders = new Headers({
-      Accept: 'application/json, */*',
-      'Content-Type': 'application/json',
-    })
-    headers && headers.map(header => defaultHeaders.append(encodeURIComponent(header.key), header.value))
-    headers = defaultHeaders
     let host = window.requestInfo.host
     let uri = `//${host}${path}`
     if (queryString) uri += '?' + queryString
     if (method === 'GET' || method === 'HEAD' || !method) {
       body = void 0
     }
-    let options = { method, headers, credentials: 'include', body }
-    this.encodeHash()
-    let $response = fetch(uri, options)
+
+    let $response = new Promise((resolve, reject) => {
+      let defaultHeaders = new Headers({
+        Accept: 'application/json, */*',
+        // 'Content-Type': 'application/json',
+      })
+
+      headers && headers.map(header => defaultHeaders.append(encodeURIComponent(header.key), header.value))
+      switch (this.body.index) {
+        case 0:
+          defaultHeaders.set('Content-Type', 'text/plain')
+          break
+        case 1:
+          defaultHeaders.set('Content-Type', 'application/json')
+          if (body) {
+            if (typeof body !== 'string') {
+              return reject(new Error('body not a valid JSON object'))
+            }
+            try {
+              JSON.parse(body)
+            } catch (e) {
+              return reject(e)
+            }
+          }
+
+          break
+        case 2:
+          defaultHeaders.set('Content-Type', 'application/x-www-form-urlencoded')
+          break
+        case 3:
+          // defaultHeaders.set('Content-Type', 'multipart/form-data')
+          break
+        case 4:
+          defaultHeaders.set('Content-Type', 'application/octet-stream')
+          break
+        default: throw new Error('not support body type');
+      }
+      headers = defaultHeaders
+
+
+      let options = { method, headers, credentials: 'include', body }
+
+      resolve(fetch(uri, options))
+
+      this.encodeHash()
+    })
+
+    // let $response = fetch(uri, options)
 
     this.props.onRequest && this.props.onRequest({ method, path, queryString, body, headers }, $response)
 
@@ -149,27 +173,31 @@ export default class SideBar extends Component {
       }
     })
   }
+  parseParams() {
+    let params = new URLSearchParams(location.hash.slice(2))
+    let query = []
+    let body = params.get('body') || ''
+    let method = params.get('method') || 'GET'
+    let bodyType = params.get('bodyType') || 1
+    let headers
+    try {
+      query = JSON.parse(params.get('query'))
+    } catch (e) { }
+    try {
+      headers = JSON.parse(params.get('headers'))
+    } catch (e) { }
+    return { method, query, body, headers, bodyType }
+  }
   componentDidMount() {
-    let parseParams = () => {
-      let params = new URLSearchParams(location.hash.slice(2))
-      let query = []
-      let body = params.get('body') || ''
-      let method = params.get('method') || 'GET'
-      let headers
-      try {
-        query = JSON.parse(params.get('query'))
-      } catch (e) { }
-      try {
-        headers = JSON.parse(params.get('headers'))
-      } catch (e) { }
+    addEventListener('hashchange', () => {
+      let { method, query, body, headers, bodyType } = this.parseParams()
       this.setState({ method, query, body, headers }, () => {
         this.headerKeyValue.setData(headers)
         this.queryKeyValue.setData(query)
+        this.body.setValue({ body, index: parseInt(bodyType, 10)})
         this.encodeQueryString(this.state.query)
       })
-    }
-    parseParams()
-    addEventListener('hashchange', parseParams)
+    })
   }
   encodeQueryString(value) {
     if (!value) {
@@ -217,7 +245,9 @@ export default class SideBar extends Component {
     })
   }
   onBodyChange(body) {
-    this.setState({ body })
+    this.setState({ body }, () => {
+      this.body.setValue({ body })
+    })
   }
   onHeaderChange(headers) {
     this.setState({ headers })
@@ -227,8 +257,8 @@ export default class SideBar extends Component {
     let body = this.state.body || ''
     let method = this.state.method || 'GET'
     let headers = this.state.headers ? JSON.stringify(this.state.headers) : '[]'
-
-    let params = new URLSearchParams({ method, query, body, headers })
+    let bodyType = this.body.index || 0
+    let params = new URLSearchParams({ method, query, body, headers, bodyType })
     location.hash = '#!' + params.toString()
   }
   render() {
@@ -237,12 +267,7 @@ export default class SideBar extends Component {
       body = (
         <div>
           <H>Body</H>
-          <CodeMirrorWrapper>
-            <CodeMirror className="CodeMirror" value={this.state.body} onChange={(e) => this.onBodyChange(e)} options={{
-              mode: 'javascript',
-              theme: 'material'
-            }} />
-          </CodeMirrorWrapper>
+          <Body value={this.state.body} index={this.state.bodyType} ref={ref => this.body = ref} onChange={v => this.onBodyChange(v)}/>
         </div>
       )
     }

@@ -53,6 +53,7 @@ align-items: center;
 background: #3f4555;
 font-size: 12px;
 `
+
 class Input extends Component {
   constructor(props) {
     super(props)
@@ -166,7 +167,7 @@ class KeyValue extends Component {
   constructor(props) {
     super(props);
 
-    let data = []
+    let data = this.props.data || []
     if (this.props.defaultValue) {
       data.push(this.props.defaultValue)
     }
@@ -196,21 +197,27 @@ class KeyValue extends Component {
     this.props.onChange && this.props.onChange(data)
   }
   setData(data) {
+    if (!data) {
+      data = []
+    }
     this.setState({ data })
   }
   render() {
     let parameters = []
-    for (let i = 0; i < this.state.data.length; i++) {
-      parameters.push(<ParameterInput
-        keyValue={this.state.data[i].key}
-        valueValue={this.state.data[i].value}
-        ref={parameterInput => parameterInput && parameterInput.setValue(this.state.data[i])}
-        key={i}
-        onChangeKey={e => this.update(i, e, 'key')}
-        onChangeValue={e => this.update(i, e, 'value')}
-        onChangeCheckBox={e => this.update(i, e, 'checked')}
-      />)
+    if (this.state.data) {
+      for (let i = 0; i < this.state.data.length; i++) {
+        parameters.push(<ParameterInput
+          keyValue={this.state.data[i].key}
+          valueValue={this.state.data[i].value}
+          ref={parameterInput => parameterInput && parameterInput.setValue(this.state.data[i])}
+          key={i}
+          onChangeKey={e => this.update(i, e, 'key')}
+          onChangeValue={e => this.update(i, e, 'value')}
+          onChangeCheckBox={e => this.update(i, e, 'checked')}
+        />)
+      }
     }
+
     return (
       <KeyValueWrapper>
         {parameters}
