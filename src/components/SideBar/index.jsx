@@ -114,39 +114,42 @@ export default class SideBar extends Component {
     let $response = new Promise((resolve, reject) => {
       let defaultHeaders = new Headers({
         Accept: 'application/json, */*',
-        // 'Content-Type': 'application/json',
+        'Content-Type': 'application/json',
       })
 
       headers && headers.map(header => defaultHeaders.append(encodeURIComponent(header.key), header.value))
-      switch (this.body.index) {
-        case 0:
-          defaultHeaders.set('Content-Type', 'text/plain')
-          break
-        case 1:
-          defaultHeaders.set('Content-Type', 'application/json')
-          if (body) {
-            if (typeof body !== 'string') {
-              return reject(new Error('body not a valid JSON object'))
+      if (method !== 'GET' && method !== 'HEAD') {
+        switch (this.body.index) {
+          case 0:
+            defaultHeaders.set('Content-Type', 'text/plain')
+            break
+          case 1:
+            defaultHeaders.set('Content-Type', 'application/json')
+            if (body) {
+              if (typeof body !== 'string') {
+                return reject(new Error('body not a valid JSON object'))
+              }
+              try {
+                JSON.parse(body)
+              } catch (e) {
+                return reject(e)
+              }
             }
-            try {
-              JSON.parse(body)
-            } catch (e) {
-              return reject(e)
-            }
-          }
 
-          break
-        case 2:
-          defaultHeaders.set('Content-Type', 'application/x-www-form-urlencoded')
-          break
-        case 3:
-          // defaultHeaders.set('Content-Type', 'multipart/form-data')
-          break
-        case 4:
-          defaultHeaders.set('Content-Type', 'application/octet-stream')
-          break
-        default: throw new Error('not support body type');
+            break
+          case 2:
+            defaultHeaders.set('Content-Type', 'application/x-www-form-urlencoded')
+            break
+          case 3:
+            // defaultHeaders.set('Content-Type', 'multipart/form-data')
+            break
+          case 4:
+            defaultHeaders.set('Content-Type', 'application/octet-stream')
+            break
+          default: throw new Error('not support body type');
+        }
       }
+
       headers = defaultHeaders
 
 
